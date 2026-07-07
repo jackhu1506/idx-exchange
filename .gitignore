@@ -1,0 +1,9 @@
+# confidential data - never commit
+csv/
+*.csv
+
+# documents
+*.pdf
+
+# mac junk
+.DS_Store
