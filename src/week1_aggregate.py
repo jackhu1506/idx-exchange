@@ -36,7 +36,7 @@ def load_and_combine(files, label):
     combined = pd.concat(frames, ignore_index=True)
     return combined
 
-# --- Sold ---
+# Sold
 sold_files = pick_sold_files()
 sold = load_and_combine(sold_files, 'Sold')
 print(f'\nSold combined (before Residential filter): {len(sold):,} rows')
@@ -44,7 +44,7 @@ print(f'\nSold combined (before Residential filter): {len(sold):,} rows')
 sold_res = sold[sold['PropertyType'] == 'Residential']
 print(f'Sold combined (after Residential filter):  {len(sold_res):,} rows')
 
-# --- Listings ---
+# Listings
 listing_files = sorted(glob.glob(os.path.join(CSV_DIR, 'CRMLSListing2*.csv')))
 listings = load_and_combine(listing_files, 'Listing')
 print(f'\nListings combined (before Residential filter): {len(listings):,} rows')
