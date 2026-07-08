@@ -1,13 +1,3 @@
-"""
-Week 1 - Monthly Dataset Aggregation
-Concatenates all monthly CRMLS Listing and Sold files (Jan 2024 through the
-most recently completed month), filters to Residential, saves combined CSVs.
-
-For Sold files, some months exist as a "_filled" variant (same data plus
-latfilled/lonfilled flags from a coordinate-filling pass). Where both exist,
-the _filled version is preferred; otherwise the plain file is used.
-"""
-
 import glob
 import os
 import pandas as pd

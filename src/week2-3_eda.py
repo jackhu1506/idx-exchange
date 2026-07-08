@@ -1,10 +1,3 @@
-"""
-Weeks 2-3 - Dataset Structuring and Validation (EDA)
-Runs on the combined residential datasets produced by week1_aggregate.py.
-Outputs: console report (structure, property types, nulls, distributions),
-missing value report CSV, distribution figures, filtered dataset CSV.
-"""
-
 import os
 import pandas as pd
 import matplotlib
