@@ -35,3 +35,12 @@ feature engineering, and Tableau dashboards.
 - Outputs: `missing_report_sold.csv`, `missing_report_listings.csv`,
   `distribution_summary_sold.csv`, `distribution_summary_listings.csv`
   (all local only)
+
+### Weeks 2-3 (Part B) - Mortgage Rate Enrichment (`week2-3_mortgage.py`)
+- Fetches the FRED MORTGAGE30US series (30-yr fixed mortgage rate, weekly,
+  1971-present)
+- Averages weekly rates to monthly averages
+- Merges the monthly rate onto both combined datasets via a year_month key
+  (CloseDate for sold, ListingContractDate for listings)
+- Validated: 0 unmatched rows in either dataset
+- Outputs: `sold_with_rates.csv`, `listings_with_rates.csv` (local only)
