@@ -4,6 +4,7 @@ csv/
 
 # documents
 *.pdf
+*.png
 
 # mac junk
 .DS_Store
