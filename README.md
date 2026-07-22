@@ -44,3 +44,21 @@ feature engineering, and Tableau dashboards.
   (CloseDate for sold, ListingContractDate for listings)
 - Validated: 0 unmatched rows in either dataset
 - Outputs: `sold_with_rates.csv`, `listings_with_rates.csv` (local only)
+
+### Weeks 4-5 - Data Cleaning & Preparation (`week4-5_cleaning.py`)
+- Tiered cleaning of the rate-enriched datasets: always-invalid records are
+  removed, while recoverable data quality issues are flagged (not dropped) so
+  downstream steps can filter as needed
+- Removes redundant duplicate columns: the listing exports carry 11 duplicated
+  header fields (renamed `.1` on load); each is verified identical to its base
+  across all rows before removal
+- Drops 100%-empty columns (8 per dataset); reports but keeps columns >90% null
+- Converts date fields to datetime; coerces key numeric fields to numeric dtypes
+- Business rule row removal (always invalid): non-positive ClosePrice/LivingArea,
+  negative DaysOnMarket, negative bed/bath counts; nulls preserved as missing
+- Date consistency flags: `listing_after_close_flag`, `purchase_after_close_flag`,
+  `negative_timeline_flag`
+- Geographic quality flags: missing coords, (0,0) sentinels, positive longitude,
+  out-of-CA-bounding-box
+- Statistical (IQR) outlier handling deliberately deferred to Week 7
+- Outputs: `sold_cleaned.csv`, `listings_cleaned.csv` (local only)

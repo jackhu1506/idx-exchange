@@ -120,7 +120,7 @@ def remove_invalid_records(df, name):
     for label, mask in rules:
         # NaN comparisons evaluate False, so nulls are retained (handled as missing, not invalid)
         count = mask.sum()
-        print(f'  {label}: {count:,} rows flagged for removal')
+        print(f'  {label}: {count:,} rows removed')
         invalid_mask |= mask.fillna(False)
 
     df = df[~invalid_mask]
@@ -174,10 +174,10 @@ def add_geo_flags(df, name):
         )
     )
 
-    print(f"  Missing coordinates:        {df['geo_missing_flag'].sum():,}")
-    print(f"  Zero (sentinel) coords:     {df['geo_zero_flag'].sum():,}")
-    print(f"  Positive longitude errors:  {df['geo_positive_lon_flag'].sum():,}")
-    print(f"  Out-of-state/implausible:   {df['geo_out_of_state_flag'].sum():,}")
+    print(f"  Missing coordinates: {df['geo_missing_flag'].sum():,}")
+    print(f"  Zero (sentinel) coords: {df['geo_zero_flag'].sum():,}")
+    print(f"  Positive longitude errors: {df['geo_positive_lon_flag'].sum():,}")
+    print(f"  Out-of-state/implausible: {df['geo_out_of_state_flag'].sum():,}")
     return df
 
 
@@ -189,8 +189,8 @@ def clean_dataset(path, name, out_path):
     df = pd.read_csv(path, low_memory=False)
     print(f'Loaded: {df.shape[0]:,} rows x {df.shape[1]} columns')
 
-    df = convert_dates(df, name)
     df = drop_duplicate_columns(df, name)
+    df = convert_dates(df, name)
     df = drop_empty_columns(df, name)
     df = coerce_numeric(df, name)
     df = remove_invalid_records(df, name)
