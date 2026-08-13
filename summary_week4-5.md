@@ -52,6 +52,8 @@ Nulls preserved (missing treated as missing, not invalid). Removals are 0.05% (s
 | Positive longitude | 31 | 92 |
 | Out-of-state / implausible | 63 | 251 |
 
+_Boundaries used are slightly wider than California's actual physical coordinates._
+
 ## Notes
 
 - **Listings coordinate gap:** 80,801 rows (~13%) lack coordinates vs ~1% for sold, because geocode-backfilled `_filled` variants exist only for sold months. Blocks the week 6 school-district join on those rows — confirm plan before starting week 6.

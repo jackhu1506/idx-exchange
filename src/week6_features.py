@@ -17,9 +17,8 @@ def add_market_metrics(df, name):
     df['PriceRatio'] = df['ClosePrice'] / olp
 
     # Close-to-Original-List Ratio (same formula, kept as its own column)
-    df['CloseToOrigListRatio'] = df['ClosePrice'] / olp
+    df['CloseToOriginalListRatio'] = df['ClosePrice'] / olp
     df['PricePerSqFt'] = df['ClosePrice'] / living
-    df['DaysOnMarketMetric'] = df['DaysOnMarket']
 
     # Year / Month / YrMo from CloseDate
     close = pd.to_datetime(df['CloseDate'], errors='coerce')
@@ -35,8 +34,8 @@ def add_market_metrics(df, name):
     # Contract to Close Days = CloseDate - PurchaseContractDate
     df['ContractToCloseDays'] = (close - pcd).dt.days
 
-    metrics = ['PriceRatio', 'CloseToOrigListRatio', 'PricePerSqFt',
-               'DaysOnMarketMetric', 'Year', 'Month', 'YrMo',
+    metrics = ['PriceRatio', 'CloseToOriginalListRatio', 'PricePerSqFt',
+               'DaysOnMarket', 'Year', 'Month', 'YrMo',
                'ListingToContractDays', 'ContractToCloseDays']
     for m in metrics:
         populated = df[m].notna().sum()
@@ -84,31 +83,44 @@ def print_sample_and_summary(df, name):
     """Deliverable output: a sample of new columns, plus a segmented summary."""
     print(f'\n--- [{name}] Sample of engineered columns ---')
     sample_cols = ['ClosePrice', 'OriginalListPrice', 'LivingArea',
-                   'PriceRatio', 'PricePerSqFt', 'DaysOnMarketMetric',
+                   'PriceRatio', 'PricePerSqFt', 'DaysOnMarket',
                    'YrMo', 'ListingToContractDays', 'ContractToCloseDays',
                    'DistrictName']
     sample_cols = [c for c in sample_cols if c in df.columns]
     # Sample from rows where the transaction metrics are populated so the table
-    # actually shows the new columns filled in.
+    # actually shows the new columns filled in. Random rather than head() because
+    # the top of the file is not representative.
     populated = df[df['PriceRatio'].notna()]
     show = populated.sample(10, random_state=42) if len(populated) >= 10 else populated
     with pd.option_context('display.max_columns', None, 'display.width', 200):
         print(show[sample_cols].to_string(index=False))
 
     print(f'\n--- [{name}] Segmented summary by CountyOrParish ---')
-    if 'CountyOrParish' in df.columns:
-        summary = df.groupby('CountyOrParish').agg(
-            n=('ClosePrice', 'size'),
-            n_priced=('ClosePrice', 'count'),
-            median_close=('ClosePrice', 'median'),
-            median_ppsf=('PricePerSqFt', 'median'),
-            median_dom=('DaysOnMarket', 'median'),
-            median_price_ratio=('PriceRatio', 'median'),
-        ).sort_values('n', ascending=False)
-        with pd.option_context('display.max_rows', 20, 'display.width', 200):
-            print(summary.head(15).round(2).to_string())
-    else:
+    if 'CountyOrParish' not in df.columns:
         print('  CountyOrParish not present, skipped')
+        return
+
+    # Price and DOM medians must describe the same population. The listings feed
+    # carries all statuses, so restrict to Closed; the sold feed is already
+    # closed-only and has no StandardStatus column.
+    if 'MlsStatus' in df.columns:
+        sub = df[df['MlsStatus'] == 'Closed']
+        print(f'  Filtered to MlsStatus == Closed: '
+              f'{len(sub):,} of {len(df):,} rows')
+    else:
+        sub = df
+        print('  MlsStatus not present, using all rows')
+
+    summary = sub.groupby('CountyOrParish').agg(
+        n=('ClosePrice', 'size'),
+        n_priced=('ClosePrice', 'count'),
+        median_close=('ClosePrice', 'median'),
+        median_ppsf=('PricePerSqFt', 'median'),
+        median_dom=('DaysOnMarket', 'median'),
+        median_price_ratio=('PriceRatio', 'median'),
+    ).sort_values('n', ascending=False)
+    with pd.option_context('display.max_rows', 20, 'display.width', 200):
+        print(summary.head(15).round(2).to_string())
 
 def load_districts():
     """Load CA school districts, keep only Unified, reproject to lat/lon."""
