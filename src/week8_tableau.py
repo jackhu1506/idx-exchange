@@ -17,8 +17,9 @@ STATUS = ['MlsStatus']
 FLAGS = ['ClosePrice_outlier_flag', 'LivingArea_outlier_flag',
          'DaysOnMarket_outlier_flag', 'any_outlier_flag',
          'ratio_implausible_flag']
+RATES = ['rate_30yr_fixed']
 
-KEEP = GEO + PROPERTY + PRICE + TIMING + COMPETITIVE + STATUS + FLAGS
+KEEP = GEO + PROPERTY + PRICE + TIMING + COMPETITIVE + STATUS + FLAGS + RATES
 
 
 def clean_zip(df, name):
