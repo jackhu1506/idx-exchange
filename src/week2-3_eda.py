@@ -4,7 +4,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-CSV_DIR = 'csv'
+CSV_DIR = 'data'
 FIG_DIR = 'figures/week2-3'
 os.makedirs(FIG_DIR, exist_ok=True)
 

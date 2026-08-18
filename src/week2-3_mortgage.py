@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-CSV_DIR = 'csv'
+CSV_DIR = 'data'
 
 # Step 1: Fetch mortgage rate data from FRED (no API key needed)
 url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US"

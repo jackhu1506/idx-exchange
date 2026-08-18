@@ -205,8 +205,8 @@ def clean_dataset(path, name, out_path):
 
 if __name__ == '__main__':
     sold = clean_dataset(
-        'csv/sold_with_rates.csv', 'SOLD', 'csv/sold_cleaned.csv'
+        'data/sold_with_rates.csv', 'SOLD', 'data/sold_cleaned.csv'
     )
     listings = clean_dataset(
-        'csv/listings_with_rates.csv', 'LISTINGS', 'csv/listings_cleaned.csv'
+        'data/listings_with_rates.csv', 'LISTINGS', 'data/listings_cleaned.csv'
     )

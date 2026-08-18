@@ -2,7 +2,7 @@ import glob
 import os
 import pandas as pd
 
-CSV_DIR = 'csv'
+CSV_DIR = 'data'
 
 def pick_sold_files():
     """Return one Sold file per month, preferring the _filled variant."""
