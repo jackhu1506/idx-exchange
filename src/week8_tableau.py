@@ -11,7 +11,7 @@ PRICE = ['ClosePrice', 'ListPrice', 'OriginalListPrice', 'PricePerSqFt',
 TIMING = ['CloseDate', 'ListingContractDate', 'PurchaseContractDate',
           'DaysOnMarket', 'ListingToContractDays', 'ContractToCloseDays',
           'Year', 'Month', 'YrMo']
-COMPETITIVE = ['ListAgentFullName', 'AgentKey',
+COMPETITIVE = ['ListAgentFullName', 'AgentKey', 'AgentDisplayName',
                'ListOfficeName', 'OfficeKey']
 STATUS = ['MlsStatus']
 FLAGS = ['ClosePrice_outlier_flag', 'LivingArea_outlier_flag',
@@ -95,6 +95,16 @@ def add_agent_key(df, name):
           f"({df['AgentKey'].notna().sum():,} of {len(df):,} now keyed)")
     return df
 
+def add_display_name(df, name):
+    """One label per AgentKey. Casing varies row to row, so take the
+    most frequent variant rather than an arbitrary one."""
+    if 'ListAgentFullName' not in df.columns:
+        return df
+    mode = (df.groupby('AgentKey')['ListAgentFullName']
+              .transform(lambda s: s.mode().iloc[0] if not s.mode().empty else pd.NA))
+    df['AgentDisplayName'] = mode
+    return df
+
 def add_office_key(df, name):
     """No office ID in the feed. Normalize the name — casefold, strip
     punctuation and suffixes, collapse whitespace — so 'Compass, Inc.' and
@@ -131,6 +141,7 @@ def process(path, name, out_path):
     df = clean_zip(df, name)
     df = add_listing_month(df, name)
     df = add_agent_key(df, name)
+    df = add_display_name(df, name)
     df = add_office_key(df, name)
     df = flag_implausible_ratio(df, name)
     df = select_columns(df, name)
