@@ -12,7 +12,7 @@ TIMING = ['CloseDate', 'ListingContractDate', 'PurchaseContractDate',
           'DaysOnMarket', 'ListingToContractDays', 'ContractToCloseDays',
           'Year', 'Month', 'YrMo']
 COMPETITIVE = ['ListAgentFullName', 'AgentKey', 'AgentDisplayName',
-               'ListOfficeName', 'OfficeKey']
+               'ListOfficeName', 'OfficeKey', 'OfficeDisplayName']
 STATUS = ['MlsStatus']
 FLAGS = ['ClosePrice_outlier_flag', 'LivingArea_outlier_flag',
          'DaysOnMarket_outlier_flag', 'any_outlier_flag',
@@ -122,6 +122,21 @@ def add_office_key(df, name):
           f"{df['ListOfficeName'].nunique():,} raw names")
     return df
 
+def add_office_display_name(df, name):
+    """One label per OfficeKey. The key is casefolded and suffix-stripped,
+    so a dozen raw spellings ('eXp Realty of California Inc', 'EXP REALTY
+    OF CALIFORNIA') collapse to one key but still render as separate rows.
+    Take the most frequent raw spelling as the label."""
+    if 'ListOfficeName' not in df.columns or 'OfficeKey' not in df.columns:
+        print(f'  [{name}] office display name skipped, missing input column')
+        return df
+    df['OfficeDisplayName'] = (
+        df.groupby('OfficeKey')['ListOfficeName']
+          .transform(lambda s: s.mode().iloc[0] if not s.mode().empty else pd.NA))
+    n_multi = (df.groupby('OfficeKey')['ListOfficeName'].nunique() > 1).sum()
+    print(f'  [{name}] OfficeDisplayName set; {n_multi:,} keys had >1 raw name')
+    return df
+
 def flag_implausible_ratio(df, name, threshold=5):
     """Flag (not null) rows where OriginalListPrice is wrong — placeholders,
     dropped zeros, and entry errors push PriceRatio far past the p99 of 1.28,
@@ -143,6 +158,7 @@ def process(path, name, out_path):
     df = add_agent_key(df, name)
     df = add_display_name(df, name)
     df = add_office_key(df, name)
+    df = add_office_display_name(df, name)
     df = flag_implausible_ratio(df, name)
     df = select_columns(df, name)
 
