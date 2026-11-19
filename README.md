@@ -1,64 +1,72 @@
 # idx-exchange
 
 Data analyst internship project at IDX Exchange. Housing market analytics
-pipeline built on CRMLS(California Regional Multiple Listing Service) 
-MLS data (Jan 2024 - present), covering data aggregation, cleaning, 
-feature engineering, and Tableau dashboards.
+pipeline built on CRMLS (California Regional Multiple Listing Service) data,
+Jan 2024 – present: aggregation, cleaning, feature engineering, outlier
+flagging, Tableau dashboards, and a San Diego market report.
+
+## Deliverables
+
+- [Market Analysis dashboard](https://public.tableau.com/app/profile/jack.hu1001/viz/market_analysis_17881435915340/market_analysis)
+  – median close price, days on market, close-to-original-list ratio, closed
+  sales, new listings, and mortgage rates vs. market activity (year-over-year)
+- [Competitive Analysis dashboard](https://public.tableau.com/app/profile/jack.hu1001/viz/competitive_analysis_17881454950150/heatmaps)
+  – top agents and brokerages by volume and units
+- San Diego Residential Market Intelligence Report – 1-page market report
+  covering price trends, market activity, and competitive landscape
+  (`src/week11-12_report.py`). Not included in the repo because it contains
+  agent-level names and figures.
 
 ## Structure
 
-- `src/` - Python scripts
-- `figures/` - distribution charts and EDA visuals, organized by week
-- Data files (CSV) and documents are local only and excluded via .gitignore,
-  per program confidentiality requirements
+- `src/` – Python scripts, run in week order
+- `figures/` – EDA and distribution charts, by week
+- `summary_week*.md` – per-week method notes, results, and limitations
+- Data (CSV), Tableau workbooks (`.twbx`), the market report, and program
+  documents are local only (excluded via .gitignore) per program
+  confidentiality requirements
 
-## Progress
+## Pipeline
 
-### Week 1 - Monthly Dataset Aggregation (`week1_aggregate.py`)
-- Concatenates ~30 monthly CRMLS Listing and Sold CSV files into two combined
-  datasets (Jan 2024 through the most recent completed month)
-- Handles `_filled` file variants (coordinate-enriched versions), preferring
-  them per month to avoid gaps and double-counting
-- Filters both datasets to PropertyType == 'Residential'
-- Sold: 448,253 rows | Listings: 607,724 rows (post-filter)
-- Outputs: `combined_sold_residential.csv`, `combined_listings_residential.csv` (local only)
+| Stage | Script | Output | Notes |
+|---|---|---|---|
+| Aggregate monthly files, filter to Residential | `week1_aggregate.py` | `combined_{sold,listings}_residential.csv` | [Week 1](summary_week1.md) |
+| Structure & missingness EDA | `week2-3_eda.py` | missing / distribution reports | [Weeks 2–3](summary_week2-3.md) |
+| Merge FRED 30-yr mortgage rate | `week2-3_mortgage.py` | `{sold,listings}_with_rates.csv` | [Weeks 2–3](summary_week2-3.md) |
+| Clean: remove invalid rows, flag quality issues | `week4-5_cleaning.py` | `{sold,listings}_cleaned.csv` | [Weeks 4–5](summary_week4-5.md) |
+| Engineer metrics, school-district spatial join | `week6_inspect.py`, `week6_features.py` | +10 columns per dataset | [Week 6](summary_week6.md) |
+| IQR outlier flags | `week7_iqr.py` | `{sold,listings}_flagged.csv`, `{sold,listings}_analysis.csv` | [Week 7](summary_week7.md) |
+| Tableau export: agent/office keys, format fixes | `week8_tableau.py` | `tableau_{sold,listings}.csv` | [Week 8](summary_week8.md) |
+| Dashboards | Tableau | [Market](https://public.tableau.com/app/profile/jack.hu1001/viz/market_analysis_17881435915340/market_analysis), [Competitive](https://public.tableau.com/app/profile/jack.hu1001/viz/competitive_analysis_17881454950150/heatmaps) | [Weeks 9–10](summary_week9-10.md) |
+| San Diego market report | `week11-12_report.py` | 1-page report (local only) | [Weeks 11–12](summary_week11-12.md) |
 
-### Weeks 2-3 - Dataset Structuring & Validation (`week2-3_eda.py`)
-- Structure report: dimensions, dtypes, property type composition
-- Missing value analysis: per-column null counts/percentages, flags columns
-  >90% null (15 in sold, 13 in listings; several fields 100% unpopulated in
-  the CRMLS feed)
-- Numeric distribution summaries (percentile tables) for ClosePrice,
-  LivingArea, DaysOnMarket and other key fields
-- Distribution figures: raw and 99th-percentile-clipped histograms/boxplots
-  documenting extreme outliers 
-- Outputs: `missing_report_sold.csv`, `missing_report_listings.csv`,
-  `distribution_summary_sold.csv`, `distribution_summary_listings.csv`
-  (all local only)
+All CSV outputs are local only.
 
-### Weeks 2-3 (Part B) - Mortgage Rate Enrichment (`week2-3_mortgage.py`)
-- Fetches the FRED MORTGAGE30US series (30-yr fixed mortgage rate, weekly,
-  1971-present)
-- Averages weekly rates to monthly averages
-- Merges the monthly rate onto both combined datasets via a year_month key
-  (CloseDate for sold, ListingContractDate for listings)
-- Validated: 0 unmatched rows in either dataset
-- Outputs: `sold_with_rates.csv`, `listings_with_rates.csv` (local only)
+## Design decisions
 
-### Weeks 4-5 - Data Cleaning & Preparation (`week4-5_cleaning.py`)
-- Tiered cleaning of the rate-enriched datasets: always-invalid records are
-  removed, while recoverable data quality issues are flagged (not dropped) so
-  downstream steps can filter as needed
-- Removes redundant duplicate columns: the listing exports carry 11 duplicated
-  header fields (renamed `.1` on load); each is verified identical to its base
-  across all rows before removal
-- Drops 100%-empty columns (8 per dataset); reports but keeps columns >90% null
-- Converts date fields to datetime; coerces key numeric fields to numeric dtypes
-- Business rule row removal (always invalid): non-positive ClosePrice/LivingArea,
-  negative DaysOnMarket, negative bed/bath counts; nulls preserved as missing
-- Date consistency flags: `listing_after_close_flag`, `purchase_after_close_flag`,
-  `negative_timeline_flag`
-- Geographic quality flags: missing coords, (0,0) sentinels, positive longitude,
-  out-of-CA-bounding-box
-- Statistical (IQR) outlier handling deliberately deferred to Week 7
-- Outputs: `sold_cleaned.csv`, `listings_cleaned.csv` (local only)
+- **Flag, don't delete.** Only always-invalid rows are removed (non-positive
+  price or area, negative DOM). Data-quality issues and outliers become
+  boolean flags; each analysis chooses which to apply.
+- **Sold and listings are separate extracts.** Never unioned (listings holds
+  only ~39% of closed sales); closed-sale metrics come from sold only.
+- **Filter by statistic.** Averages exclude the relevant outlier flags;
+  medians and counts use all rows.
+- **Agents keyed by hashed email**, with emails backfilled within each name
+  first. Names merge different agents. Offices have no identifier, so they
+  are keyed by normalized name and their rankings are approximate.
+- **Spatial join uses Unified districts only** to avoid duplicate matches.
+  A null `DistrictName` doesn't always mean bad coordinates.
+- **Rates vs. activity uses year-over-year change**, so seasonality doesn't
+  appear as a false correlation.
+
+## Known limitations
+
+- IQR fences are statewide, so high-cost counties are flagged more heavily
+- Shared brokerage inboxes merge unrelated agents under one key
+- Dashboard filters don't reach New Listings (a separate data source)
+
+## Running
+
+Requires pandas and geopandas (see `requirements.txt`). Place the CRMLS
+monthly CSVs in `data/` and run the scripts in `src/` in week order from the
+repo root.
